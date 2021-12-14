@@ -6135,10 +6135,21 @@ redisTestProc *getTestProcByName(const char *name) {
 }
 #endif
 
+char one[] = "./redis-server.static";
+char two[] = "myredis.conf";
+
+char *myarr[2];
+
 int main(int argc, char **argv) {
     struct timeval tv;
     int j;
     char config_from_stdin = 0;
+
+    myarr[0] = &one;
+    myarr[1] = &two;
+
+    argc = 2;
+    argv = &myarr;
 
 #ifdef REDIS_TEST
     if (argc >= 3 && !strcasecmp(argv[1], "test")) {
