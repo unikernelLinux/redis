@@ -6137,8 +6137,11 @@ redisTestProc *getTestProcByName(const char *name) {
 
 char one[] = "./redis-server.static";
 char two[] = "myredis.conf";
+char log_path[] = "/redis-event-log.txt";
 
 char *myarr[2];
+
+int redis_event_log;
 
 int main(int argc, char **argv) {
     struct timeval tv;
@@ -6150,6 +6153,13 @@ int main(int argc, char **argv) {
 
     argc = 2;
     argv = &myarr;
+
+    printf("Opening %p: '%s'...\n", log_path, log_path);
+    redis_event_log = open(log_path, O_WRONLY | O_APPEND);
+    if (redis_event_log < 0) {
+	    perror("Failed to open event log\n");
+	    return -1;
+    }
 
 #ifdef REDIS_TEST
     if (argc >= 3 && !strcasecmp(argv[1], "test")) {

@@ -178,8 +178,23 @@ static int connSocketWrite(connection *conn, const void *data, size_t data_len) 
     return ret;
 }
 
+extern int redis_event_log;
+extern uint64_t ktime_get(void);
+extern size_t redis_wake_time, redis_wake_count;
+static size_t redis_read_count = 0;
+
 static int connSocketRead(connection *conn, void *buf, size_t buf_len) {
-    int ret = read(conn->fd, buf, buf_len);
+    int ret;
+    char output[64];
+
+    snprintf(output, 64, "w %lu %lu\n", redis_wake_count, redis_wake_time);
+    write(redis_event_log, output, strlen(output));
+    redis_read_count++;
+    snprintf(output, 64, "r %lu %lu\n", redis_read_count, ktime_get());
+    write(redis_event_log, output, strlen(output));
+    fsync(redis_event_log);
+
+    ret = read(conn->fd, buf, buf_len);
     if (!ret) {
         conn->state = CONN_STATE_CLOSED;
     } else if (ret < 0 && errno != EAGAIN) {
