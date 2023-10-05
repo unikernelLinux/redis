@@ -58,12 +58,16 @@
 #include <locale.h>
 #include <sys/socket.h>
 #include <sys/resource.h>
+#include <pthread.h>
 
 #ifdef __linux__
 #include <sys/mman.h>
 #endif
 
 /* Our shared "common" objects */
+
+/* We are using the following spin lock to enforce client serialization while using async event handling. */
+pthread_spinlock_t serialClients;
 
 struct sharedObjectsStruct shared;
 
@@ -3130,6 +3134,8 @@ void makeThreadKillable(void) {
 
 void initServer(void) {
     int j;
+
+    pthread_spin_init(&serialClients, PTHREAD_PROCESS_PRIVATE);
 
     signal(SIGHUP, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);

@@ -34,6 +34,7 @@
 #include <sys/uio.h>
 #include <math.h>
 #include <ctype.h>
+#include <pthread.h>
 
 static void setProtocolError(const char *errstr, client *c);
 int postponeClientRead(client *c);
@@ -2127,14 +2128,18 @@ void processInputBuffer(client *c) {
     }
 }
 
+extern pthread_spinlock_t serialClients;
+
 void readQueryFromClient(connection *conn) {
     client *c = connGetPrivateData(conn);
     int nread, readlen;
     size_t qblen;
 
+    pthread_spin_lock(&serialClients);
+
     /* Check if we want to read from the client later when exiting from
      * the event loop. This is the case if threaded I/O is enabled. */
-    if (postponeClientRead(c)) return;
+    if (postponeClientRead(c)) goto out;
 
     /* Update total number of reads on server */
     atomicIncr(server.stat_total_reads_processed, 1);
@@ -2162,16 +2167,16 @@ void readQueryFromClient(connection *conn) {
     nread = connRead(c->conn, c->querybuf+qblen, readlen);
     if (nread == -1) {
         if (connGetState(conn) == CONN_STATE_CONNECTED) {
-            return;
+            goto out;
         } else {
             serverLog(LL_VERBOSE, "Reading from client: %s",connGetLastError(c->conn));
             freeClientAsync(c);
-            return;
+            goto out;
         }
     } else if (nread == 0) {
         serverLog(LL_VERBOSE, "Client closed connection");
         freeClientAsync(c);
-        return;
+        goto out;
     } else if (c->flags & CLIENT_MASTER) {
         /* Append the query buffer to the pending (not applied) buffer
          * of the master. We'll use this buffer later in order to have a
@@ -2192,12 +2197,14 @@ void readQueryFromClient(connection *conn) {
         sdsfree(ci);
         sdsfree(bytes);
         freeClientAsync(c);
-        return;
+        goto out;
     }
 
     /* There is more data in the client input buffer, continue parsing it
      * in case to check if there is a full command to execute. */
      processInputBuffer(c);
+out:
+     pthread_spin_unlock(&serialClients);
 }
 
 void getClientsMaxBuffers(unsigned long *longest_output_list,
