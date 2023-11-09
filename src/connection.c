@@ -144,10 +144,18 @@ void *connGetPrivateData(connection *conn) {
  * move here as we implement additional connection types.
  */
 
+void release_ukl_event(void *event);
+
 /* Close the connection and free resources. */
 static void connSocketClose(connection *conn) {
+    struct event_data *ev_data;
+
     if (conn->fd != -1) {
-        aeDeleteFileEvent(server.el,conn->fd, AE_READABLE | AE_WRITABLE);
+        //aeDeleteFileEvent(server.el,conn->fd, AE_READABLE | AE_WRITABLE);
+        ev_data = (struct event_data *)conn->upcall_container;
+	// Call kernel unregister function
+	release_ukl_event(conn->kernel_data);
+	zfree(ev_data);
         close(conn->fd);
         conn->fd = -1;
     }
@@ -232,6 +240,8 @@ static int connSocketSetWriteHandler(connection *conn, ConnectionCallbackFunc fu
     return C_OK;
 }
 
+void *do_event_ctl(int fd, void *private);
+
 /* Register a read handler, to be called when the connection is readable.
  * If NULL, the existing handler is removed.
  */
@@ -242,8 +252,18 @@ static int connSocketSetReadHandler(connection *conn, ConnectionCallbackFunc fun
     if (!conn->read_handler)
         aeDeleteFileEvent(server.el,conn->fd,AE_READABLE);
     else
-        if (aeCreateFileEvent(server.el,conn->fd,
+    {
+        struct event_data *ev_data = zmalloc(sizeof(struct event_data));
+	ev_data->el = server.el;
+	ev_data->conn = conn;
+	conn->upcall_container = (void *)ev_data;
+	conn->kernel_data = (void *)do_event_ctl(conn->fd, (void *)ev_data);
+        /*
+	 * We don't actually want to do this, we want to register the upcall handler instead
+	 * if (aeCreateFileEvent(server.el,conn->fd,
                     AE_READABLE,conn->type->ae_handler,conn) == AE_ERR) return C_ERR;
+	*/
+    }
     return C_OK;
 }
 

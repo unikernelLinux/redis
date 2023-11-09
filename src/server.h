@@ -2746,4 +2746,9 @@ int tlsConfigure(redisTLSContextConfig *ctx_config);
 
 int iAmMaster(void);
 
+struct event_data {
+	struct aeEventLoop *el;
+	struct connection *conn;
+};
+
 #endif

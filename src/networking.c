@@ -1146,6 +1146,14 @@ void acceptTLSHandler(aeEventLoop *el, int fd, void *privdata, int mask) {
     }
 }
 
+int redis_event_handler(void *data) {
+	struct event_data *evdata = (struct event_data*)data;
+
+	readQueryFromClient(evdata->conn);
+
+	return 0;
+}
+
 void acceptUnixHandler(aeEventLoop *el, int fd, void *privdata, int mask) {
     int cfd, max = MAX_ACCEPTS_PER_CALL;
     UNUSED(el);

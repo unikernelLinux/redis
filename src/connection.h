@@ -77,6 +77,8 @@ struct connection {
     short int refs;
     int last_errno;
     void *private_data;
+    void *upcall_container;
+    void *kernel_data;
     ConnectionCallbackFunc conn_handler;
     ConnectionCallbackFunc write_handler;
     ConnectionCallbackFunc read_handler;
