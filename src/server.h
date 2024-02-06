@@ -2751,4 +2751,8 @@ struct event_data {
 	struct connection *conn;
 };
 
+struct worker {
+        int dying;
+};
+
 #endif

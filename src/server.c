@@ -6146,10 +6146,20 @@ char two[] = "myredis.conf";
 
 char *myarr[2];
 
+void init_event_workitem_queue(void);
+void *worker_thread(void *arg);
+
 int main(int argc, char **argv) {
     struct timeval tv;
     int j;
+    pthread_t event;
+    pthread_attr_t event_attrs;
+    struct worker worker;
     char config_from_stdin = 0;
+
+    printf("Starting workitem queue\n");
+    init_event_workitem_queue();
+    printf("Done starting queue\n");
 
     myarr[0] = &one;
     myarr[1] = &two;
@@ -6396,6 +6406,26 @@ int main(int argc, char **argv) {
 
     redisSetCpuAffinity(server.server_cpulist);
     setOOMScoreAdj(-1);
+
+    worker.dying = 0;
+
+    /* Start UKL event handler thread */
+    printf("Starting UKL event worker thread\n");
+    if (pthread_attr_init(&event_attrs)) {
+	    perror("Failed to initialize pthread_attrs");
+	    exit(1);
+    }
+
+    if (pthread_attr_setdetachstate(&event_attrs, PTHREAD_CREATE_DETACHED)) {
+	    perror("Cannot set detatched state attr");
+	    exit(1);
+    }
+
+    if (pthread_create(&event, &event_attrs, worker_thread, &worker)) {
+	    perror("Failed to create event thread");
+	    exit(1);
+    }
+    printf("Done starting thread, entering main loop.\n");
 
     aeMain(server.el);
     aeDeleteEventLoop(server.el);

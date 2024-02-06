@@ -146,6 +146,33 @@ void *connGetPrivateData(connection *conn) {
 
 void release_ukl_event(void *event);
 
+int redis_event_handler(void *data);
+void register_ukl_handler_task(void);
+void *workitem_queue_consume_event(void);
+void ukl_worker_sleep(void);
+
+void *worker_thread(void *arg)
+{
+        void *data;
+        struct worker *worker = (struct worker*)arg;
+        void *ret = NULL;
+
+	printf("Registering thread\n");
+        register_ukl_handler_task();
+	printf("Done registering, entering work loop\n");
+
+        while (!worker->dying) {
+                data = workitem_queue_consume_event();
+                if (data) {
+			printf("Handling event\n");
+                        ret = redis_event_handler(data);
+                } else {
+			printf("No work, sleeping\n");
+                        ukl_worker_sleep();
+                }
+        }
+}
+
 /* Close the connection and free resources. */
 static void connSocketClose(connection *conn) {
     struct event_data *ev_data;
