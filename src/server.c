@@ -66,9 +66,6 @@
 
 /* Our shared "common" objects */
 
-/* We are using the following spin lock to enforce client serialization while using async event handling. */
-pthread_spinlock_t serialClients;
-
 struct sharedObjectsStruct shared;
 
 /* Global vars that are actually used as constants. The following double
@@ -3134,8 +3131,6 @@ void makeThreadKillable(void) {
 
 void initServer(void) {
     int j;
-
-    pthread_spin_init(&serialClients, PTHREAD_PROCESS_PRIVATE);
 
     signal(SIGHUP, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);

@@ -2136,14 +2136,11 @@ void processInputBuffer(client *c) {
     }
 }
 
-extern pthread_spinlock_t serialClients;
-
 void readQueryFromClient(connection *conn) {
     client *c = connGetPrivateData(conn);
     int nread, readlen;
     size_t qblen;
 
-    pthread_spin_lock(&serialClients);
 
     /* Check if we want to read from the client later when exiting from
      * the event loop. This is the case if threaded I/O is enabled. */
@@ -2212,7 +2209,7 @@ void readQueryFromClient(connection *conn) {
      * in case to check if there is a full command to execute. */
      processInputBuffer(c);
 out:
-     pthread_spin_unlock(&serialClients);
+     return;
 }
 
 void getClientsMaxBuffers(unsigned long *longest_output_list,
