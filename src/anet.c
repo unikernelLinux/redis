@@ -494,7 +494,7 @@ int anetUnixServer(char *err, char *path, mode_t perm, int backlog)
 static int anetGenericAccept(char *err, int s, struct sockaddr *sa, socklen_t *len) {
     int fd;
     while(1) {
-        fd = accept(s,sa,len);
+        fd = accept4(s,sa,len,SOCK_NONBLOCK);
         if (fd == -1) {
             if (errno == EINTR)
                 continue;

@@ -217,7 +217,7 @@ static int connSocketRead(connection *conn, void *buf, size_t buf_len) {
     int ret = read(conn->fd, buf, buf_len);
     if (!ret) {
         conn->state = CONN_STATE_CLOSED;
-    } else if (ret < 0 && errno != EAGAIN) {
+    } else if (ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
         conn->last_errno = errno;
 
         /* Don't overwrite the state of a connection that is not already
