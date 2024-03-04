@@ -150,12 +150,17 @@ int redis_event_handler(void *data);
 void register_ukl_handler_task(void);
 void *workitem_queue_consume_event(void);
 void ukl_worker_sleep(void);
+extern int redis_event_log;
+extern uint64_t ktime_get(void);
+extern size_t redis_wake_time, redis_wake_count;
+static size_t redis_read_count = 0;
 
 void *worker_thread(void *arg)
 {
         void *data;
         struct worker *worker = (struct worker*)arg;
         void *ret = NULL;
+	char output[64];
 
 	printf("Registering thread\n");
         register_ukl_handler_task();
@@ -164,10 +169,16 @@ void *worker_thread(void *arg)
         while (!worker->dying) {
                 data = workitem_queue_consume_event();
                 if (data) {
-			printf("Handling event\n");
+			//printf("Handling event\n");
+			snprintf(output, 64, "w %lu %lu\n", redis_wake_count, redis_wake_time);
+			write(redis_event_log, output, strlen(output));
+			redis_read_count++;
+			snprintf(output, 64, "r %lu %lu\n", redis_read_count, ktime_get());
+			write(redis_event_log, output, strlen(output));
+			fsync(redis_event_log);
                         ret = redis_event_handler(data);
                 } else {
-			printf("No work, sleeping\n");
+			//printf("No work, sleeping\n");
                         ukl_worker_sleep();
                 }
         }

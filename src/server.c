@@ -6138,11 +6138,14 @@ redisTestProc *getTestProcByName(const char *name) {
 
 char one[] = "./redis-server.static";
 char two[] = "myredis.conf";
+char log_path[] = "/redis-event-log.txt";
 
 char *myarr[2];
 
 void init_event_workitem_queue(void);
 void *worker_thread(void *arg);
+
+int redis_event_log;
 
 int main(int argc, char **argv) {
     struct timeval tv;
@@ -6153,6 +6156,11 @@ int main(int argc, char **argv) {
     struct worker worker;
     char config_from_stdin = 0;
 
+    redis_event_log = open(log_path, O_WRONLY | O_APPEND);
+    if (redis_event_log < 0) {
+	    perror("Failed to open event log\n");
+	    exit(1);
+    }
     printf("Starting workitem queue\n");
     init_event_workitem_queue();
     printf("Done starting queue\n");
