@@ -6147,7 +6147,8 @@ void *worker_thread(void *arg);
 int main(int argc, char **argv) {
     struct timeval tv;
     int j;
-    pthread_t event;
+    cpu_set_t main_cpu, event_cpu;
+    pthread_t event, main_thread;
     pthread_attr_t event_attrs;
     struct worker worker;
     char config_from_stdin = 0;
@@ -6155,6 +6156,16 @@ int main(int argc, char **argv) {
     printf("Starting workitem queue\n");
     init_event_workitem_queue();
     printf("Done starting queue\n");
+
+    CPU_ZERO(&main_cpu);
+    CPU_ZERO(&event_cpu);
+    CPU_SET(2, &main_cpu);
+    CPU_SET(3, &event_cpu);
+    main_thread = pthread_self();
+    if (pthread_setaffinity_np(main_thread, sizeof(cpu_set_t), &main_cpu)) {
+	    perror("Failed to set affinity for main thread.");
+	    exit(1);
+    }
 
     myarr[0] = &one;
     myarr[1] = &two;
@@ -6418,6 +6429,10 @@ int main(int argc, char **argv) {
 
     if (pthread_create(&event, &event_attrs, worker_thread, &worker)) {
 	    perror("Failed to create event thread");
+	    exit(1);
+    }
+    if (pthread_setaffinity_np(event, sizeof(cpu_set_t), &event_cpu)) {
+	    perror("Failed to set CPU affinity for event thread");
 	    exit(1);
     }
     printf("Done starting thread, entering main loop.\n");
