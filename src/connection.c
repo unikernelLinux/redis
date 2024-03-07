@@ -164,10 +164,10 @@ void *worker_thread(void *arg)
         while (!worker->dying) {
                 data = workitem_queue_consume_event();
                 if (data) {
-			printf("Handling event\n");
+			//printf("Handling event\n");
                         ret = redis_event_handler(data);
                 } else {
-			printf("No work, sleeping\n");
+			//printf("No work, sleeping\n");
                         ukl_worker_sleep();
                 }
         }
