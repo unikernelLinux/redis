@@ -1151,6 +1151,7 @@ int redis_event_handler(void *data) {
 	struct event_data *evdata = (struct event_data*)data;
 
 	readQueryFromClient(evdata->conn);
+	handleClientsWithPendingWrites();
 
 	return 0;
 }
