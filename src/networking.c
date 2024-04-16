@@ -1029,6 +1029,7 @@ void clientAcceptHandler(connection *conn) {
     moduleFireServerEvent(REDISMODULE_EVENT_CLIENT_CHANGE,
                           REDISMODULE_SUBEVENT_CLIENT_CHANGE_CONNECTED,
                           c);
+    atomic_store(&checkpoint1, true);
 }
 
 #define MAX_ACCEPTS_PER_CALL 1000

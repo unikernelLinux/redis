@@ -50,11 +50,15 @@
 #include <sys/socket.h>
 #include <lua.h>
 #include <signal.h>
+#include <stdbool.h>
+#include <stdatomic.h>
+
 
 #ifdef HAVE_LIBSYSTEMD
 #include <systemd/sd-daemon.h>
 #endif
 
+volatile atomic_bool checkpoint_1 = ATOMIC_VAR_INIT(false);
 typedef long long mstime_t; /* millisecond time type. */
 typedef long long ustime_t; /* microsecond time type. */
 
