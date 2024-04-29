@@ -157,9 +157,7 @@ void *worker_thread(void *arg)
         struct worker *worker = (struct worker*)arg;
         void *ret = NULL;
 
-	printf("Registering thread\n");
         register_ukl_handler_task();
-	printf("Done registering, entering work loop\n");
 
         while (!worker->dying) {
                 data = workitem_queue_consume_event();
@@ -168,12 +166,13 @@ void *worker_thread(void *arg)
 				//Busy waiting for the main thread to set up all the connection state
 			}
 			//printf("Handling event\n");
-                        ret = redis_event_handler(data);
+                        redis_event_handler(data);
                 } else {
 			//printf("No work, sleeping\n");
                         ukl_worker_sleep();
                 }
         }
+	return ret;
 }
 
 /* Close the connection and free resources. */

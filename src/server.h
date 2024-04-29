@@ -2757,6 +2757,7 @@ struct event_data {
 
 struct worker {
         int dying;
+	long cpu;
 };
 
 #endif

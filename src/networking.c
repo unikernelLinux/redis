@@ -1029,7 +1029,7 @@ void clientAcceptHandler(connection *conn) {
     moduleFireServerEvent(REDISMODULE_EVENT_CLIENT_CHANGE,
                           REDISMODULE_SUBEVENT_CLIENT_CHANGE_CONNECTED,
                           c);
-    atomic_store(&checkpoint1, true);
+    atomic_store(&checkpoint_1, true);
 }
 
 #define MAX_ACCEPTS_PER_CALL 1000
@@ -1150,6 +1150,10 @@ void acceptTLSHandler(aeEventLoop *el, int fd, void *privdata, int mask) {
 int redis_event_handler(void *data) {
 	struct event_data *evdata = (struct event_data*)data;
 
+	if (!evdata) {
+		printf("Got empty event data, returning\n");
+		return 0;
+	}
 	readQueryFromClient(evdata->conn);
 	handleClientsWithPendingWrites();
 
