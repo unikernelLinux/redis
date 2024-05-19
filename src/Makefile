@@ -89,8 +89,10 @@ endif
 -include .make-settings
 
 FINAL_CFLAGS=$(STD) $(WARN) $(OPT) $(DEBUG) $(CFLAGS) $(REDIS_CFLAGS)
-FINAL_LDFLAGS=$(LDFLAGS) $(REDIS_LDFLAGS) $(DEBUG)
-FINAL_LIBS=-lm
+FINAL_LDFLAGS=$(LDFLAGS) $(REDIS_LDFLAGS) $(DEBUG) \
+	      -Wl,-rpath-link=$(shell pwd)/../../.. -L$(shell pwd)/../../.. \
+	      -Wl,-rpath=/data -Wl,--dynamic-linker=/data/ld-linux-x86-64.so.2
+FINAL_LIBS=-lm -luklsyms -lpthread
 DEBUG=-g -ggdb
 
 # Linux ARM needs -latomic at linking time
@@ -340,7 +342,7 @@ endif
 
 # redis-server
 $(REDIS_SERVER_NAME): $(REDIS_SERVER_OBJ)
-	$(REDIS_LD) -o $@ $^ ../deps/hiredis/libhiredis.a ../deps/lua/src/liblua.a $(FINAL_LIBS)
+	$(REDIS_LD) -o $@ $^ ../deps/hiredis/libhiredis.a ../deps/lua/src/liblua.a ../../../undefined_sys_hack.o $(FINAL_LIBS)
 
 # redis-sentinel
 $(REDIS_SENTINEL_NAME): $(REDIS_SERVER_NAME)

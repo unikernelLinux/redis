@@ -481,7 +481,13 @@ int aeWait(int fd, int mask, long long milliseconds) {
     }
 }
 
+extern void set_bypass_limit(int val);
+extern void set_bypass_syscall(int val);
+
 void aeMain(aeEventLoop *eventLoop) {
+    set_bypass_limit(10);
+    set_bypass_syscall(1);
+
     eventLoop->stop = 0;
     while (!eventLoop->stop) {
         aeProcessEvents(eventLoop, AE_ALL_EVENTS|
