@@ -6143,6 +6143,7 @@ char two[] = "myredis.conf";
 char *myarr[2];
 
 void init_event_workitem_queue(void);
+void init_upcall_handler(void);
 void *worker_thread(void *arg);
 
 int main(int argc, char **argv) {
@@ -6407,6 +6408,8 @@ int main(int argc, char **argv) {
 
     redisSetCpuAffinity(server.server_cpulist);
     setOOMScoreAdj(-1);
+
+    init_upcall_handler();
 
     printf("Starting event handler worker threads\n");
     for (long i = 0; i < avail_cpus; i++) {
