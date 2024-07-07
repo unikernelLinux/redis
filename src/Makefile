@@ -89,8 +89,10 @@ endif
 -include .make-settings
 
 FINAL_CFLAGS=$(STD) $(WARN) $(OPT) $(DEBUG) $(CFLAGS) $(REDIS_CFLAGS)
-FINAL_LDFLAGS=$(LDFLAGS) $(REDIS_LDFLAGS) $(DEBUG)
-FINAL_LIBS=-lm
+FINAL_LDFLAGS=$(LDFLAGS) $(REDIS_LDFLAGS) $(DEBUG) \
+	      -Wl,-rpath-link=$(shell pwd)/../../.. -L$(shell pwd)/../../.. \
+	      -Wl,-rpath=/data -Wl,--dynamic-linker=/data/ld-linux-x86-64.so.2
+FINAL_LIBS=-lm -luklsyms -lpthread
 DEBUG=-g -ggdb
 
 # Linux ARM needs -latomic at linking time
