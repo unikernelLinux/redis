@@ -6143,8 +6143,12 @@ char two[] = "myredis.conf";
 char *myarr[2];
 
 void init_event_workitem_queue(void);
-void init_upcall_handler(void);
+void init_upcall_handler(int concurrency_model);
 void *worker_thread(void *arg);
+
+#ifndef UKL_CONN_MODEL
+#define UKL_CONN_MODEL 0
+#endif
 
 int main(int argc, char **argv) {
     struct timeval tv;
@@ -6409,7 +6413,7 @@ int main(int argc, char **argv) {
     redisSetCpuAffinity(server.server_cpulist);
     setOOMScoreAdj(-1);
 
-    init_upcall_handler();
+    init_upcall_handler(UKL_CONN_MODEL);
 
     printf("Starting event handler worker threads\n");
     for (long i = 0; i < avail_cpus; i++) {
