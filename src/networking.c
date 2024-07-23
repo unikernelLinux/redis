@@ -108,6 +108,8 @@ static void clientSetDefaultAuth(client *c) {
                        !(c->user->flags & USER_FLAG_DISABLED);
 }
 
+void *do_event_ctl(int fd, void *private);
+
 client *createClient(connection *conn) {
     client *c = zmalloc(sizeof(client));
 
@@ -1029,7 +1031,12 @@ void clientAcceptHandler(connection *conn) {
     moduleFireServerEvent(REDISMODULE_EVENT_CLIENT_CHANGE,
                           REDISMODULE_SUBEVENT_CLIENT_CHANGE_CONNECTED,
                           c);
-    atomic_store(&checkpoint_1, true);
+
+    struct event_data *ev_data = zmalloc(sizeof(struct event_data));
+    ev_data->el = server.el;
+    ev_data->conn = conn;
+    conn->upcall_container = (void *)ev_data;
+    conn->kernel_data = (void *)do_event_ctl(conn->fd, (void *)ev_data);
 }
 
 #define MAX_ACCEPTS_PER_CALL 1000

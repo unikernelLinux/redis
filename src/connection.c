@@ -162,9 +162,6 @@ void *worker_thread(void *arg)
         while (!worker->dying) {
                 data = workitem_queue_consume_event();
                 if (data) {
-			while(!atomic_load(&checkpoint_1)){
-				//Busy waiting for the main thread to set up all the connection state
-			}
 			//printf("Handling event\n");
                         redis_event_handler(data);
                 } else {
@@ -282,12 +279,6 @@ static int connSocketSetReadHandler(connection *conn, ConnectionCallbackFunc fun
         aeDeleteFileEvent(server.el,conn->fd,AE_READABLE);
     else
     {
-        struct event_data *ev_data = zmalloc(sizeof(struct event_data));
-	ev_data->el = server.el;
-	ev_data->conn = conn;
-	conn->upcall_container = (void *)ev_data;
-	atomic_store(&checkpoint_1, false);
-	conn->kernel_data = (void *)do_event_ctl(conn->fd, (void *)ev_data);
         /*
 	 * We don't actually want to do this, we want to register the upcall handler instead
 	 * if (aeCreateFileEvent(server.el,conn->fd,
