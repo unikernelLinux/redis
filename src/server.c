@@ -6146,17 +6146,18 @@ void init_event_workitem_queue(void);
 void init_upcall_handler(int concurrency_model);
 void *worker_thread(void *arg);
 
-#ifndef UKL_CONN_MODEL
-#define UKL_CONN_MODEL 0
+#ifdef UKL_CONN_MODEL
+#undef UKL_CONN_MODEL
 #endif
+#define UKL_CONN_MODEL 2
 
 int main(int argc, char **argv) {
     struct timeval tv;
     int j;
     cpu_set_t event_cpu;
-    pthread_t *events, main_thread;
+    pthread_t events, main_thread;
     pthread_attr_t event_attrs;
-    struct worker *workers;
+    struct worker worker;
     char config_from_stdin = 0;
     long avail_cpus = 0;
 
@@ -6164,8 +6165,6 @@ int main(int argc, char **argv) {
 
     avail_cpus = sysconf(_SC_NPROCESSORS_ONLN);
 
-    events = malloc(sizeof(pthread_t) * avail_cpus);
-    workers = malloc(sizeof(struct worker) * avail_cpus);
 
     myarr[0] = &one;
     myarr[1] = &two;
@@ -6416,32 +6415,22 @@ int main(int argc, char **argv) {
     init_upcall_handler(UKL_CONN_MODEL);
 
     printf("Starting event handler worker threads\n");
-    for (long i = 0; i < avail_cpus; i++) {
-    	workers[i].dying = 0;
-    	workers[i].cpu = i;
-	CPU_ZERO(&event_cpu);
-	CPU_SET(i, &event_cpu);
+    worker.dying = 0;
 
-    	/* Start UKL event handler thread */
-    	if (pthread_attr_init(&event_attrs)) {
-	    	perror("Failed to initialize pthread_attrs");
-	    	exit(1);
-    	}
+    /* Start UKL event handler thread */
+    if (pthread_attr_init(&event_attrs)) {
+   	perror("Failed to initialize pthread_attrs");
+    	exit(1);
+    }
 
-    	if (pthread_attr_setdetachstate(&event_attrs, PTHREAD_CREATE_DETACHED)) {
-	    	perror("Cannot set detatched state attr");
-	    	exit(1);
-    	}
+    if (pthread_attr_setdetachstate(&event_attrs, PTHREAD_CREATE_DETACHED)) {
+    	perror("Cannot set detatched state attr");
+    	exit(1);
+    }
 
-	if (pthread_attr_setaffinity_np(&event_attrs, sizeof(cpu_set_t), &event_cpu)) {
-		perror("Cannot set affinity in attr");
-		exit(1);
-	}
-
-    	if (pthread_create(&events[i], &event_attrs, worker_thread, &workers[i])) {
-	    	perror("Failed to create event thread");
-	    	exit(1);
-    	}
+    if (pthread_create(&event, &event_attrs, worker_thread, &worker)) {
+    	perror("Failed to create event thread");
+    	exit(1);
     }
     printf("Done starting threads, entering main loop.\n");
 
