@@ -6428,7 +6428,7 @@ int main(int argc, char **argv) {
     	exit(1);
     }
 
-    if (pthread_create(&event, &event_attrs, worker_thread, &worker)) {
+    if (pthread_create(&events, &event_attrs, worker_thread, &worker)) {
     	perror("Failed to create event thread");
     	exit(1);
     }
