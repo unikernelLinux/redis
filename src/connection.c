@@ -150,6 +150,7 @@ int redis_event_handler(void *data);
 void register_ukl_handler_task(void);
 void *workitem_queue_consume_event(void);
 void ukl_worker_sleep(void);
+void check_sched(void);
 
 void *worker_thread(void *arg)
 {
@@ -164,6 +165,7 @@ void *worker_thread(void *arg)
                 if (data) {
 			//printf("Handling event\n");
                         redis_event_handler(data);
+			check_sched();
                 } else {
 			//printf("No work, sleeping\n");
                         ukl_worker_sleep();
