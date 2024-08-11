@@ -165,7 +165,6 @@ void *worker_thread(void *arg)
                 if (data) {
 			//printf("Handling event\n");
                         redis_event_handler(data);
-			check_sched();
                 } else {
 			//printf("No work, sleeping\n");
                         ukl_worker_sleep();
