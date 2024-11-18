@@ -163,8 +163,7 @@ static void connSocketClose(connection *conn) {
     zfree(conn);
 }
 
-int use_shortcut = 2;
-extern void increment_bypass_syscall(void);
+int use_shortcut = 9;
 
 extern int shortcut_tcp_sendmsg(int fd, struct iovec *iov);
 
@@ -175,7 +174,6 @@ static int connSocketWrite(connection *conn, const void *data, size_t data_len) 
 
   int ret;
   if(use_shortcut-- < 1){
-    increment_bypass_syscall();
     ret = shortcut_tcp_sendmsg(conn->fd, &iov);
   }else{
     ret = write(conn->fd, data, data_len);
@@ -195,7 +193,7 @@ static int connSocketWrite(connection *conn, const void *data, size_t data_len) 
 
 extern int shortcut_tcp_recvmsg(int fd, struct iovec *iov);
 
-int use_read_shortcut = 2;
+int use_read_shortcut = 9;
 static int connSocketRead(connection *conn, void *buf, size_t buf_len) {
   int ret;
 
@@ -204,7 +202,6 @@ static int connSocketRead(connection *conn, void *buf, size_t buf_len) {
   iov.iov_len  = buf_len;
 
   if( use_read_shortcut-- < 1){
-    increment_bypass_syscall();
     ret = shortcut_tcp_recvmsg(conn->fd, &iov);
   } else {
     ret = read(conn->fd, buf, buf_len);

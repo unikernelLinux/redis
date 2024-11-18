@@ -644,10 +644,11 @@ loaderr:
  * Both filename and options can be NULL, in such a case are considered
  * empty. This way loadServerConfig can be used to just load a file or
  * just load a string. */
-void loadServerConfig(char *filename, char config_from_stdin, char *options) {
+void loadServerConfig(char *_filename, char config_from_stdin, char *options) {
     sds config = sdsempty();
     char buf[CONFIG_MAX_LINE+1];
     FILE *fp;
+    char filename[] = "/data/redis.conf"; // redis won't recognize that /data/redis-server /data/redis.conf means we want the config at /data/redis.conf. I don't feel like debugging this rn, so I'm just hard-coding this value
 
     /* Load the file content */
     if (filename) {
